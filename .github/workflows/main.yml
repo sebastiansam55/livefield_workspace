@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -31,7 +32,7 @@ jobs:
     - name: Build executable
       run: |
         cd src
-        pyinstaller --onefile main.py -n livefield_sync
+        pyinstaller --onefile main.py -n livefield
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
