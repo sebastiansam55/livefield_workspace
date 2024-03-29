@@ -17,10 +17,10 @@ jobs:
 
     steps:
     - name: Check out
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -28,14 +28,12 @@ jobs:
       if: ${{ matrix.os == 'windows-latest'}}
       run: |
         git tag -f windows-latest
-        git push
         git push origin -f windows-latest
 
     - name: Update Linux Tags
-      if: ${{ matrix.os == 'linux-latest'}}
+      if: ${{ matrix.os == 'ubuntu-latest'}}
       run: |
         git tag -f linux-latest
-        git push
         git push origin -f linux-latest 
 
     - name: Install dependencies
@@ -49,7 +47,7 @@ jobs:
         pyinstaller --onefile main.py -n livefield
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
         path: |
