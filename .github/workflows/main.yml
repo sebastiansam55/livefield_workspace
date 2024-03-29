@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.9]
+        python-version: ['3.10']
 
     steps:
     - name: Check out
@@ -43,14 +43,14 @@ jobs:
           src/dist/livefield.exe
 
     - name: Create Windows Release
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: "softprops/action-gh-release@v2"
       if: ${{ matrix.os == 'windows-latest'}}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "windows-latest"
+        token: "${{ secrets.GITHUB_TOKEN }}"
+        tag_name: "windows-latest"
         prerelease: true
-        title: "Windows Development Build"
-        description: "Windows development description field"
+        name: "Windows Development Build"
+        body: "Windows development description field"
         files: |
           README.md
           src/dist/livefield.exe
@@ -58,14 +58,14 @@ jobs:
           jsconfig.json
 
     - name: Create Ubuntu Release
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: "softprops/action-gh-release@v2"
       if: ${{ matrix.os == 'ubuntu-latest'}}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "ubuntu-latest"
+        token: "${{ secrets.GITHUB_TOKEN }}"
+        tag_name: "ubuntu-latest"
         prerelease: true
-        title: "Ubuntu Development Build"
-        description: "Ubuntu development description field"
+        name: "Ubuntu Development Build"
+        body: "Ubuntu development description field"
         files: |
           README.md
           src/dist/livefield
