@@ -6,9 +6,12 @@
             "type": "shell",
             "command": "./src/dist/livefield",
             "args":[
-                // "main.py",
                 "sync"
             ],
+            "windows": {
+                "command": "./src/dist/livefield.exe",
+                "args":["sync"]
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true

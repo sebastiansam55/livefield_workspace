@@ -6,7 +6,11 @@ import json
 import argparse
 from tabulate import tabulate
 from pathlib import Path
+from packaging import version
 import sys
+
+__version__= '0.0.1'
+max_gs_version_tested= version.parse("6.3.188.0")
 
 class square9api():
 
@@ -15,6 +19,9 @@ class square9api():
         self.auth = HTTPBasicAuth(config['user'], config['password'])
         self.dbid = config['dbid']
         self.token = self.get_token()
+        self.version = self.get_version()
+        self.ignore_version = config.get('version_ignore')
+        self.validate()
 
     def request(self, verb, endpoint, body=None, headers={'Content-type':'application/json'}):
         r = requests.request(verb, endpoint, headers=headers, data=body, auth=self.auth)
@@ -30,10 +37,22 @@ class square9api():
                     raise Exception("HTTP 500 error")
             r.raise_for_status()
 
+    def validate(self):
+        if max_gs_version_tested<self.version:
+            if self.ignore_version:
+                print("WARN: Ignorning version compabitily!")
+            else:
+                sys.exit("WARN: GlobalSearch version detected higher than max tested version, there may be compatibility issues!")
+
     def get_token(self):
         endpoint = f"{self.square9api}/api/licenses"
         token = self.request('GET', endpoint)
         return token['Token']
+    
+    def get_version(self):
+        endpoint = f"{self.square9api}/api/admin?function=version"
+        gs_version = self.request('GET', endpoint)
+        return version.parse(gs_version)
 
     def get_live_fields(self, raw=False):
         # get lists and filter
@@ -49,8 +68,10 @@ class square9api():
             return livefields
     
     def script_escape(self, script:str):
-        script = script.replace('\n', '\\n')
-        return script
+        return script.replace('\n', '\\n')
+    
+    def script_unescape(self, script:str):
+        return script.replace('\\n', '\n')
     
     def make_live_field(self, name, script):
         endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields"
@@ -87,7 +108,7 @@ class square9api():
     def update_live_field(self, field, script, local_field):
         endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields/{field['ID']}"
         #populate script from file
-        field['ExtendedConfig']['LiveField']['Script'] = script.replace('\n', '')
+        field['ExtendedConfig']['LiveField']['Script'] = self.script_unescape(script)
 
         # populate other values from config.json
         field['ExtendedConfig']['LiveField']['Method'] = local_field['method']
@@ -102,16 +123,20 @@ class square9api():
 
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='livefield',
+        description='Development Workspace Tool for GlobalSearch Live Fields',
+    )
     subparsers = parser.add_subparsers(dest='command', help='Action to take [init|sync|ls|mkfield|rm|update]')
 
     parser.add_argument("--config", dest="config", default="config.json", help="Path to config file, defaults to ./config.json")
+    parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
 
     parser_make_field = subparsers.add_parser('mkfield', help='Make Live Field')
     parser_make_field.add_argument("name", help='Live Field')
     parser_make_field.add_argument("script", help='File to use as Live Field script')
 
-    parser_update_field = subparsers.add_parser('update')
+    parser_update_field = subparsers.add_parser('update', help='Update a single live field')
     parser_update_field.add_argument("id", help='Live Field ID')
     parser_update_field.add_argument("name", help='Live Field Name')
     parser_update_field.add_argument("script", help='File to use as Live Field script')
@@ -159,6 +184,7 @@ if __name__=="__main__":
 
         output_folder = Path(config['directory'])
         if not output_folder.is_dir():
+            print(f"Creating Live Field Directory: {output_folder.absolute}")
             output_folder.mkdir(parents=True, exist_ok=True)
 
         for field in fields:
@@ -175,7 +201,7 @@ if __name__=="__main__":
                 "body":live_field['Body']
             })
             with open(filename, 'w') as f:
-                f.write(field['ExtendedConfig']['LiveField']['Script'])
+                f.write(field['ExtendedConfig']['LiveField']['Script'].replace('\\n', '\n'))
         
         with open(args.config, 'w+') as f:
             config['mapping'] = mapping
@@ -193,5 +219,4 @@ if __name__=="__main__":
                 print(f"Updating: {field}")
                 # print(f"Field Retrieved from API: {lfields[field['name']]}")
                 api.update_live_field(lfields[field['name']], f.read(), field)
-                
-        pass
+
