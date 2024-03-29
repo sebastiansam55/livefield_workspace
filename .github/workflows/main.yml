@@ -1,0 +1,71 @@
+name: Build single file pyinstaller
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.9]
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller requests tabulate
+
+    - name: Build executable
+      run: |
+        cd src
+        pyinstaller --onefile main.py -n livefield_sync
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: executable-${{ matrix.os }}
+        path: |
+          src/dist/livefield
+          src/dist/livefield.exe
+
+    - name: Create Windows Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      if: ${{ matrix.os == 'windows-latest'}}
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "windows-latest"
+        prerelease: true
+        title: "Windows Development Build"
+        files: |
+          README.md
+          src/dist/livefield.exe
+          ex_config.json
+          jsconfig.json
+
+    - name: Create Ubuntu Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      if: ${{ matrix.os == 'ubuntu-latest'}}
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "ubuntu-latest"
+        prerelease: true
+        title: "Ubuntu Development Build"
+        files: |
+          README.md
+          src/dist/livefield
+          ex_config.json
+          jsconfig.json
+

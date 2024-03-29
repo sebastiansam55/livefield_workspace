@@ -1,0 +1,7 @@
+{
+    "square9api": "http://hostname/square9api",
+    "directory": "hostname",
+    "user": "username",
+    "password": "password",
+    "dbid": 1
+}
