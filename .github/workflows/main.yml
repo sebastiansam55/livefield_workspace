@@ -71,6 +71,7 @@ jobs:
         token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: true
         name: "Ubuntu Development Build"
+        tag_name: ${{github.ref}}
         body: |
           # Setup instructions
           * Download and unpack dev_workspace.zip
@@ -97,6 +98,7 @@ jobs:
         token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: true
         name: "Windows Development Build"
+        tag_name: ${{github.ref}}
         body: |
           # Setup instructions
           * Download and unpack dev_workspace.zip
