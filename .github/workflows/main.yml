@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.9]
+        python-version: [3.10]
 
     steps:
     - name: Check out
@@ -50,6 +50,7 @@ jobs:
         automatic_release_tag: "windows-latest"
         prerelease: true
         title: "Windows Development Build"
+        description: "Windows development description field"
         files: |
           README.md
           src/dist/livefield.exe
@@ -64,6 +65,7 @@ jobs:
         automatic_release_tag: "ubuntu-latest"
         prerelease: true
         title: "Ubuntu Development Build"
+        description: "Ubuntu development description field"
         files: |
           README.md
           src/dist/livefield
