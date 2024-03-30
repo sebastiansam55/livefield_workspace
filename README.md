@@ -19,21 +19,28 @@ Otherwise you can sync from the command line;
 livefield.exe sync
 ```
 
+### File monitor
+Use the `monitor` command and it will watch for any file updates on the javascript files and save the script on file change
+```
+livefield.exe monitor
+```
+
 ## livefield
 ```
-usage: livefield [-h] [--config CONFIG] [--version] {mkfield,update,init,sync,ls,rm} ...
+usage: livefield [-h] [--config CONFIG] [--version] {mkfield,update,init,sync,ls,rm,monitor} ...
 
-Development Workspace for GlobalSearch Live Fields
+Development Workspace Tool for GlobalSearch Live Fields
 
 positional arguments:
-  {mkfield,update,init,sync,ls,rm}
-                        Action to take [init|sync|ls|mkfield|rm|update]
+  {mkfield,update,init,sync,ls,rm,monitor}
+                        Action to take [init|sync|ls|mkfield|rm|update|monitor]
     mkfield             Make Live Field
     update              Update a single live field
     init                Import from GlobalSearch instance
     sync                Sync workspace to server
     ls                  List Live Fields
     rm                  Delete Live Field (PERMANENT!)
+    monitor             Monitor files for changes and sync automatically
 
 options:
   -h, --help            show this help message and exit

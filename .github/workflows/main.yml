@@ -39,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller requests tabulate
+        pip install pyinstaller requests tabulate watchdog
 
     - name: Build executable
       run: |
@@ -84,18 +84,7 @@ jobs:
         prerelease: true
         name: "Ubuntu Development Build"
         tag_name: "linux-latest"
-        body: |
-          # Setup instructions
-          * Download and unpack dev_workspace.zip
-          * Update the `square9api`,`username`,`password` and `dbid` values in `config.json`
-          * In VS Code use the "open folder" option to open the unpack folder
-          * Open the VS Code terminal (`Ctrl+Shift+~`)
-          * Run `livefield[.exe] init` (add or remove .exe depending on platform)
-            * This will download and create files for each of the Live Fields in the GlobalSearch database. 
-            * If you have a live field that is using the GET type functionality you can edit this in the "config.json" file
-          * Edit script/config.json values as needed.
-          * To push your changes back to the server use "build" command in VS Code (`Ctrl+Shift+B`)
-            * alternately you can run `livefield[.exe] sync
+        body_path: RELEASE.md
         files: |
           dev_workspace.zip
           README.md
@@ -112,18 +101,7 @@ jobs:
         name: "Windows Development Build"
         tag_name: "windows-latest"
         make_latest: true
-        body: |
-          # Setup instructions
-          * Download and unpack dev_workspace.zip
-          * Update the `square9api`,`username`,`password` and `dbid` values in `config.json`
-          * In VS Code use the "open folder" option to open the unpack folder
-          * Open the VS Code terminal (`Ctrl+Shift+~`)
-          * Run `livefield[.exe] init` (add or remove .exe depending on platform)
-            * This will download and create files for each of the Live Fields in the GlobalSearch database. 
-            * If you have a live field that is using the GET type functionality you can edit this in the "config.json" file
-          * Edit script/config.json values as needed.
-          * To push your changes back to the server use "build" command in VS Code (`Ctrl+Shift+B`)
-            * alternately you can run `livefield[.exe] sync
+        body_path: RELEASE.md
         files: |
           dev_workspace.zip
           README.md

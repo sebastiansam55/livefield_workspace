@@ -8,6 +8,9 @@ from tabulate import tabulate
 from pathlib import Path
 from packaging import version
 import sys
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileModifiedEvent
 
 __version__= '0.0.1'
 max_gs_version_tested= version.parse("6.3.188.0")
@@ -53,6 +56,11 @@ class square9api():
         endpoint = f"{self.square9api}/api/admin?function=version"
         gs_version = self.request('GET', endpoint)
         return version.parse(gs_version)
+    
+    def get_field(self, id):
+        endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields/{id}"
+        field = self.request('GET', endpoint)
+        return field[0]
 
     def get_live_fields(self, raw=False):
         # get lists and filter
@@ -105,7 +113,8 @@ class square9api():
         data = self.request('POST', endpoint, body=body)
         return data
 
-    def update_live_field(self, field, script, local_field):
+    def update_live_field(self, id, script, local_field):
+        field = self.get_field(id)
         endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields/{field['ID']}"
         #populate script from file
         field['ExtendedConfig']['LiveField']['Script'] = self.script_unescape(script)
@@ -122,12 +131,57 @@ class square9api():
         return data
 
 
+class FileMonitor(FileSystemEventHandler):
+    #TODO if config.json file is updated, restart file monitor to make sure mapping is rebuilt
+    # (and allow for changes to config.json)
+    min_delay = 2
+
+    def __init__(self, square9api:square9api, config):
+        self.api = square9api
+        self.files = []
+        self.mapping = config['mapping']
+        for field in config['mapping']:
+            self.files.append(field['filename'])
+        print(self.files)
+
+        # watchdog will commonly send "duplicate" file events, so we need to debounce, 
+        # essentially, there is a 2 second delay before a file getting updated will trigger an save
+        self.debounce_array = {}
+        for item in self.files:
+            self.debounce_array[item] = 0
+        
+        super().__init__()
+
+    def on_modified(self, event: FileSystemEvent) -> None:
+        if type(event) is FileModifiedEvent:
+            for file in self.files:
+                if file in event.src_path:
+                    start = time.time()
+                    if (self.debounce_array[file] < (start)):
+                        print(f"Updating field: {file}")
+                        #TODO id, script, local_field
+                        #grab filename, parse config['mapping'], match on filename and grab id, 
+                        #id, f.read(), config['mapping'] match
+                        for field in self.mapping:
+                            if field['name'] in file:
+                                field_data = self.api.get_field(field['id'])
+                                print(field_data)
+                                break
+                        
+                        with open(file, 'r') as f:
+                            self.api.update_live_field(field['id'], f.read(), field)
+                            self.debounce_array[file] = time.time()+self.min_delay
+                    else:
+                        print(f"Debounce block: {file}")
+                    
+        return super().on_modified(event)
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser(
         prog='livefield',
         description='Development Workspace Tool for GlobalSearch Live Fields',
     )
-    subparsers = parser.add_subparsers(dest='command', help='Action to take [init|sync|ls|mkfield|rm|update]')
+    subparsers = parser.add_subparsers(dest='command', help='Action to take [init|sync|ls|mkfield|rm|update|monitor]')
 
     parser.add_argument("--config", dest="config", default="config.json", help="Path to config file, defaults to ./config.json")
     parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
@@ -142,13 +196,11 @@ if __name__=="__main__":
     parser_update_field.add_argument("script", help='File to use as Live Field script')
 
     parser_init_workspace = subparsers.add_parser('init', help="Import from GlobalSearch instance")
-
     parser_sync_workspace = subparsers.add_parser('sync', help="Sync workspace to server")
-
-
     parser_list_field = subparsers.add_parser('ls', help="List Live Fields")
     parser_rm_field = subparsers.add_parser('rm', help="Delete Live Field (PERMANENT!)")
-    
+
+    parser_monitor_workspace = subparsers.add_parser('monitor', help="Monitor files for changes and sync automatically")
 
     args = parser.parse_args()
 
@@ -156,8 +208,7 @@ if __name__=="__main__":
         config = json.load(f)
 
     api = square9api(config)
-    # print(api.token)
-    
+
     if args.command == "ls":
         fields = api.get_live_fields()
         # print(len(fields))
@@ -174,8 +225,11 @@ if __name__=="__main__":
     
     elif args.command == "update":
         print(f"Updating Live Field {args.name}. Script path: {args.script}")
-        with open(args.script, 'r') as f:
-            api.update_live_field(args.id, args.name, f.read())
+        raise NotImplementedError
+        # with open(args.script, 'r') as f:
+        #     for field in config['mapping']:
+        #         if args.id==field['id']:
+        #             api.update_live_field(args.id, f.read(), field)
     
     elif args.command == "init":
         print("Creating development directory for Live Fields")
@@ -216,7 +270,21 @@ if __name__=="__main__":
         
         for field in config['mapping']:
             with open(field['filename'], 'r') as f:
-                print(f"Updating: {field}")
-                # print(f"Field Retrieved from API: {lfields[field['name']]}")
-                api.update_live_field(lfields[field['name']], f.read(), field)
+                data = f.read()
+                api.update_live_field(lfields[field['name']]['ID'], data, field)
+
+
+    elif args.command == "monitor":
+        print("Starting filesystem monitoring")
+        observer = Observer()
+        observer.schedule(FileMonitor(api, config), path=".", recursive=True)
+        observer.start()
+        try:
+            while observer.is_alive():
+                observer.join()
+        finally:
+            observer.stop()
+            observer.join()
+
+
 
