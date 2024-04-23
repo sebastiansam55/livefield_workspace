@@ -63,6 +63,7 @@ jobs:
         cp ex_config.json tmp/config.json
         cp jsconfig.json tmp/jsconfig.json
         cp .vscode/tasks.json tmp/.vscode/tasks.json
+        cp global.d.ts tmp/global.d.ts
         python -c "import shutil; shutil.make_archive('dev_workspace', 'zip', 'tmp/')"
 
     - name: Create Linux Zip
@@ -74,6 +75,7 @@ jobs:
         cp ex_config.json tmp/config.json
         cp jsconfig.json tmp/jsconfig.json
         cp .vscode/tasks.json tmp/.vscode/tasks.json
+        cp global.d.ts tmp/global.d.ts
         python -c "import shutil; shutil.make_archive('dev_workspace', 'zip', 'tmp/')"
 
     - name: Create Linux Release
