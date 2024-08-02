@@ -14,7 +14,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileModifiedEvent
 
 __version__= '0.0.1'
-max_gs_version_tested= version.parse("6.3.188.0")
+max_gs_version_tested= version.parse("6.3.195.0")
 
 class square9api():
 
@@ -42,11 +42,12 @@ class square9api():
             r.raise_for_status()
 
     def validate(self):
-        if max_gs_version_tested<self.version:
-            if self.ignore_version:
-                print("WARN: Ignorning version compabitily!")
-            else:
-                sys.exit("WARN: GlobalSearch version detected higher than max tested version, there may be compatibility issues!")
+        if not args.versioncheck:
+            if max_gs_version_tested<self.version:
+                if self.ignore_version:
+                    print("WARN: Ignorning version compabitily!")
+                else:
+                    sys.exit("WARN: GlobalSearch version detected higher than max tested version, there may be compatibility issues!")
 
     def get_token(self):
         endpoint = f"{self.square9api}/api/licenses"
@@ -186,6 +187,7 @@ if __name__=="__main__":
 
     parser.add_argument("--config", dest="config", default="config.json", help="Path to config file, defaults to ./config.json")
     parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
+    parser.add_argument('--ignore-version-check', default=False, action='store_true', help='Disabled GS Version check', dest='versioncheck')
 
     parser_make_field = subparsers.add_parser('mkfield', help='Make Live Field')
     parser_make_field.add_argument("name", help='Live Field')
