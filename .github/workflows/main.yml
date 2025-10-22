@@ -17,10 +17,10 @@ jobs:
 
     steps:
     - name: Check out
-      uses: actions/checkout@v3
+      uses: actions/checkout@latest
 
     - name: Setup Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@latest
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -47,7 +47,7 @@ jobs:
         pyinstaller --onefile main.py -n livefield
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@latest
       with:
         name: executable-${{ matrix.os }}
         path: |
@@ -79,7 +79,7 @@ jobs:
         python -c "import shutil; shutil.make_archive('dev_workspace', 'zip', 'tmp/')"
 
     - name: Create Linux Release
-      uses: "softprops/action-gh-release@v2"
+      uses: "softprops/action-gh-release@latest"
       if: ${{ matrix.os == 'ubuntu-latest'}}
       with:
         token: "${{ secrets.GITHUB_TOKEN }}"
@@ -95,7 +95,7 @@ jobs:
           jsconfig.json
 
     - name: Create Windows Release
-      uses: "softprops/action-gh-release@v2"
+      uses: "softprops/action-gh-release@latest"
       if: ${{ matrix.os == 'windows-latest'}}
       with:
         token: "${{ secrets.GITHUB_TOKEN }}"
