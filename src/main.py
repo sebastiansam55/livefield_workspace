@@ -9,6 +9,7 @@ from pathlib import Path
 from packaging import version
 import sys
 import time
+from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileModifiedEvent
 
@@ -187,6 +188,7 @@ if __name__=="__main__":
 
     parser.add_argument("--config", dest="config", default="config.json", help="Path to config file, defaults to ./config.json")
     parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
+    parser.add_argument('--ignore-version-check', default=False, action='store_true', help='Disabled GS Version check', dest='versioncheck')
 
     parser_make_field = subparsers.add_parser('mkfield', help='Make Live Field')
     parser_make_field.add_argument("name", help='Live Field')
@@ -246,10 +248,10 @@ if __name__=="__main__":
         for field in fields:
             #TODO sanitize filenames
             live_field = field['ExtendedConfig']['LiveField']
-            print(live_field)
-            filename = f"{output_folder.name}/{field['Name']}.js"
+            filename = Path(f"{output_folder.name}/{field['Name']}.js")
             mapping.append({
-                "id":field['ID'], "name":field['Name'], "filename":filename,
+                "id":field['ID'], "name":field['Name'], 
+                "filename":str(filename),
                 "method":live_field['Method'], 
                 "url":live_field['Url'],
                 "headers":live_field['Headers'],
