@@ -1,3 +1,4 @@
 config.json
 src/dist/*
 src/build/*
+*.js
