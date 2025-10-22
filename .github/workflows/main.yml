@@ -17,21 +17,21 @@ jobs:
 
     steps:
     - name: Check out
-      uses: actions/checkout@latest
+      uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: actions/setup-python@latest
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Update Windows Tags
-      if: ${{ matrix.os == 'windows-latest'}}
+      if: ${{ matrix.os == 'windows-latest' }}
       run: |
         git tag -f windows-latest
         git push origin -f windows-latest
 
     - name: Update Linux Tags
-      if: ${{ matrix.os == 'ubuntu-latest'}}
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         git tag -f linux-latest
         git push origin -f linux-latest 
@@ -47,7 +47,7 @@ jobs:
         pyinstaller --onefile main.py -n livefield
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@latest
+      uses: actions/upload-artifact@v4
       with:
         name: executable-${{ matrix.os }}
         path: |
@@ -55,7 +55,7 @@ jobs:
           src/dist/livefield.exe
 
     - name: Create Windows Zip
-      if: ${{ matrix.os == 'windows-latest'}}
+      if: ${{ matrix.os == 'windows-latest' }}
       run: |
         mkdir -p tmp/.vscode
         cp README.md tmp/README.md
@@ -67,7 +67,7 @@ jobs:
         python -c "import shutil; shutil.make_archive('dev_workspace', 'zip', 'tmp/')"
 
     - name: Create Linux Zip
-      if: ${{ matrix.os == 'ubuntu-latest'}}
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         mkdir -p tmp/.vscode
         cp README.md tmp/README.md
@@ -79,10 +79,10 @@ jobs:
         python -c "import shutil; shutil.make_archive('dev_workspace', 'zip', 'tmp/')"
 
     - name: Create Linux Release
-      uses: "softprops/action-gh-release@latest"
-      if: ${{ matrix.os == 'ubuntu-latest'}}
+      uses: softprops/action-gh-release@v2
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       with:
-        token: "${{ secrets.GITHUB_TOKEN }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
         prerelease: true
         name: "Ubuntu Development Build"
         tag_name: "linux-latest"
@@ -95,10 +95,10 @@ jobs:
           jsconfig.json
 
     - name: Create Windows Release
-      uses: "softprops/action-gh-release@latest"
-      if: ${{ matrix.os == 'windows-latest'}}
+      uses: softprops/action-gh-release@v2
+      if: ${{ matrix.os == 'windows-latest' }}
       with:
-        token: "${{ secrets.GITHUB_TOKEN }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
         prerelease: true
         name: "Windows Development Build"
         tag_name: "windows-latest"
