@@ -13,7 +13,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileModifiedEvent
 
 __version__= '0.0.1'
-max_gs_version_tested= version.parse("6.3.188.0")
+max_gs_version_tested= version.parse("6.3.350.0")
 
 class square9api():
 
@@ -26,8 +26,10 @@ class square9api():
         self.ignore_version = config.get('version_ignore')
         self.validate()
 
-    def request(self, verb, endpoint, body=None, headers={'Content-type':'application/json'}):
-        r = requests.request(verb, endpoint, headers=headers, data=body, auth=self.auth)
+    def request(self, verb, endpoint, body=None, headers={'Content-type':'application/json'}, basicAuth=None):
+        if basicAuth is None:
+            headers['Ss-Token'] = self.token
+        r = requests.request(verb, endpoint, headers=headers, data=body, auth=basicAuth)
         if r.status_code==200:
             return r.json()
         else:
@@ -45,11 +47,11 @@ class square9api():
             if self.ignore_version:
                 print("WARN: Ignorning version compabitily!")
             else:
-                sys.exit("WARN: GlobalSearch version detected higher than max tested version, there may be compatibility issues!")
+                print("WARN: GlobalSearch version detected higher than max tested version, there may be compatibility issues!")
 
     def get_token(self):
         endpoint = f"{self.square9api}/api/licenses"
-        token = self.request('GET', endpoint)
+        token = self.request('GET', endpoint, basicAuth=self.auth)
         return token['Token']
     
     def get_version(self):
@@ -57,8 +59,8 @@ class square9api():
         gs_version = self.request('GET', endpoint)
         return version.parse(gs_version)
     
-    def get_field(self, id):
-        endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields/{id}"
+    def get_field(self, field_id):
+        endpoint = f"{self.square9api}/api/admin/databases/{self.dbid}/fields/{field_id}"
         field = self.request('GET', endpoint)
         return field[0]
 
@@ -145,7 +147,7 @@ class FileMonitor(FileSystemEventHandler):
         print(self.files)
 
         # watchdog will commonly send "duplicate" file events, so we need to debounce, 
-        # essentially, there is a 2 second delay before a file getting updated will trigger an save
+        # essentially, you can't trigger it to update/save twice within 2 seconds
         self.debounce_array = {}
         for item in self.files:
             self.debounce_array[item] = 0
